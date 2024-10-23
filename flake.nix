@@ -17,9 +17,10 @@
       {
         devShell = pkgs.mkShell {
           buildInputs =  with pkgs; [
-
-            # llvmPackages_17
-            boost
+            (boost.override { 
+              enableShared = false;
+              enableStatic = true;
+            })
             clang-tools
             bear
             binutils
@@ -31,7 +32,7 @@
               python-pkgs.numpy
             ]))
 
-            (pkgs.callPackage ./algo1/package.nix {})
+            # (pkgs.callPackage ./algo1/package.nix {})
 
           ];
         };
