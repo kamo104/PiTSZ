@@ -1,0 +1,56 @@
+[
+  {
+    "arguments": [
+      "/nix/store/9bv7dcvmfcjnmg5mnqwqlq2wxfn8d7yi-gcc-wrapper-13.2.0/bin/g++",
+      "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+      "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+      "-I/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/include",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/generator.dir/generator.cpp.o",
+      "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/generator.cpp"
+    ],
+    "directory": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/build",
+    "file": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/generator.cpp",
+    "output": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/build/CMakeFiles/generator.dir/generator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/9bv7dcvmfcjnmg5mnqwqlq2wxfn8d7yi-gcc-wrapper-13.2.0/bin/g++",
+      "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+      "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+      "-I/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/include",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/solution.dir/solution.cpp.o",
+      "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/solution.cpp"
+    ],
+    "directory": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/build",
+    "file": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/solution.cpp",
+    "output": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/build/CMakeFiles/solution.dir/solution.cpp.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/9bv7dcvmfcjnmg5mnqwqlq2wxfn8d7yi-gcc-wrapper-13.2.0/bin/g++",
+      "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+      "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+      "-I/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/include",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/verifier.dir/verifier.cpp.o",
+      "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/verifier.cpp"
+    ],
+    "directory": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/build",
+    "file": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/verifier.cpp",
+    "output": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/151908_algorithm(1)/build/CMakeFiles/verifier.dir/verifier.cpp.o"
+  }
+]

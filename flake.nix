@@ -2,7 +2,6 @@
   description = "AGS dev flake";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # firefox.url = "github:nix-community/flake-firefox-nightly";
     flake-utils.url = "github:numtide/flake-utils";
   };
   outputs = { self, nixpkgs, flake-utils }:
@@ -26,6 +25,13 @@
             binutils
             cmake
             gnumake
+
+
+            (python3.withPackages (python-pkgs: [
+              python-pkgs.numpy
+            ]))
+
+            (pkgs.callPackage ./algo1/package.nix {})
 
           ];
         };

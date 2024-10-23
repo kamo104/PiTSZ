@@ -4,12 +4,13 @@ void parseArgs(int argc, char *argv[], po::variables_map &vm) {
   po::options_description desc("Allowed options");
   desc.add_options()("help,h", "print this message and leave")(
       "instance_filename", po::value<string>(),
-      "name of the instance input file")("solution_filename",
-                                         po::value<string>(),
-                                         "name of the solution output file");
+      "name of the instance input file")(
+      "solution_filename", po::value<string>(),
+      "name of the solution output file")("time", po::value<int>(), "time");
   po::positional_options_description pos_desc;
   pos_desc.add("instance_filename", 1);
   pos_desc.add("solution_filename", 1);
+  pos_desc.add("time", 1);
 
   po::store(po::command_line_parser(argc, argv)
                 .options(desc)
