@@ -1,0 +1,50 @@
+[
+  {
+    "arguments": [
+      "/nix/store/9bv7dcvmfcjnmg5mnqwqlq2wxfn8d7yi-gcc-wrapper-13.2.0/bin/g++",
+      "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+      "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+      "-I/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/include",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/generator.dir/generator.cpp.o",
+      "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/generator.cpp"
+    ],
+    "directory": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/build",
+    "file": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/generator.cpp",
+    "output": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/build/CMakeFiles/generator.dir/generator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/9bv7dcvmfcjnmg5mnqwqlq2wxfn8d7yi-gcc-wrapper-13.2.0/bin/g++",
+      "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+      "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+      "-I/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/include",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/weryfikator.dir/weryfikator.cpp.o",
+      "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/weryfikator.cpp"
+    ],
+    "directory": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/build",
+    "file": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/weryfikator.cpp",
+    "output": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/build/CMakeFiles/weryfikator.dir/weryfikator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/nix/store/9bv7dcvmfcjnmg5mnqwqlq2wxfn8d7yi-gcc-wrapper-13.2.0/bin/g++",
+      "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+      "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+      "-I/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/include",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/solution.dir/solution.cpp.o",
+      "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/solution.cpp"
+    ],
+    "directory": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/build",
+    "file": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/solution.cpp",
+    "output": "/home/kamo/Studia/Sem-VII/PiTSZ/lab/p1/build/CMakeFiles/solution.dir/solution.cpp.o"
+  }
+]
