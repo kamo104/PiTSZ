@@ -7,6 +7,6 @@
 ``./build/solution [instance] [outfile]`` <br>
 
 #### or: <br>
-``./solution [instance] [outfile]`` <br>
+``./151908.out [instance] [outfile]`` <br>
 
 
