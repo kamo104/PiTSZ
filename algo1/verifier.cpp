@@ -6,7 +6,7 @@ pair<bool, int> verify(const Instance &instance, const Solution &solution) {
   // check number of used processes
   if (size != solution.proc.size()) {
     cerr << format("The number of processes used({}) is different than in the "
-                   "instance({})",
+                   "instance({})\n",
                    solution.proc.size(), size);
     return {false, 0};
   }
@@ -17,7 +17,7 @@ pair<bool, int> verify(const Instance &instance, const Solution &solution) {
             solution.proc.end();
   if (!c3) {
     cerr << format(
-        "The solution contains a process outside the allowed range({}:{})", 1,
+        "The solution contains a process outside the allowed range({}:{})\n", 1,
         size);
     return {false, 0};
   }
@@ -29,7 +29,7 @@ pair<bool, int> verify(const Instance &instance, const Solution &solution) {
   }
   const auto &it = std::find(used.begin(), used.end(), false);
   if (it != used.end()) {
-    cerr << format("The solution doesn't include process {}", it._M_offset + 1);
+    cerr << format("The solution doesn't include process {}\n", it._M_offset + 1);
     return {false, 0};
   }
 
@@ -38,7 +38,7 @@ pair<bool, int> verify(const Instance &instance, const Solution &solution) {
   int s2 = solution.score;
   if (getScore(instance, solution) != solution.score) {
     cerr << format(
-        "The raported score({}) is different from the calculated({})", s1, s2);
+        "The raported score({}) is different from the calculated({})\n", s1, s2);
     return {false, 0};
   }
   return {true, s1};

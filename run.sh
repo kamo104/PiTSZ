@@ -4,9 +4,42 @@
 prog_dir="algorytmy1"
 instances_dir="my_instances"
 output_dir="out"
+log_file="run-log.txt"
 
 mkdir -p "$output_dir"
+rm "$log_file"
+touch "$log_file"
 
+# Function to run the command and log the results
+run_command() {
+    local f1_name="$1"
+    local instance_file="$2"
+    local output_file="$3"
+    local prefix="$4"
+    
+    # time_limit = instance_size/10
+    local time_limit=$( echo $instance_file | sed 's/[a-z_\/]*[0-9]*_//' | sed 's/\.txt/\/10/' | bc)
+    # Create the full command string
+    local command="$prefix $instance_file $output_file $time_limit"
+
+    # Capture execution time and results
+    local time_str=$( (time $command > /dev/null 2>&1) 2>&1 | grep real | awk '{print $2}')
+
+    minutes=${time_str%%m*}
+    seconds=${time_str##*m}
+    seconds=${seconds//s/}
+    seconds=${seconds//,/.}
+    real_time=$(echo "$minutes * 60 + $seconds" | bc -l)
+    real_time=${real_time//./,}
+
+    local raported_score=$(head -n1 "$output_file")
+    local real_score=$(./build/verifier "$instance_file" "$output_file" 2>/dev/null)
+    
+    # Log the output
+    echo "$real_time $raported_score $real_score $output_file" | tee -a "$log_file"
+}
+
+# Iterate over each program
 for f1 in "$prog_dir"/*; do
     f1_name=$(basename "$f1")
     if [[ "$f1" == *.py ]]; then
@@ -14,30 +47,22 @@ for f1 in "$prog_dir"/*; do
     else
         prefix="./$f1"
     fi
-    for f2 in "$instances_dir"/*; do
-        f2_name=$(basename "$f2")
-        output_file="$output_dir/out_${f1_name}_${f2_name}"
 
-        # Create the full command string
-        command="$prefix $f2 $output_file 5"
-        
-        # $command
-        # real_time=$( (time $command > /dev/null 2>&1) 2>&1 | grep real | awk '{print $2}')
-        
-        # # Print only the real time
-        # # echo "Command: $command"
-        # echo "time: $real_time $output_file"
+    # Iterate over each instance file
+    for instance_file in "$instances_dir"/*; do
+        instance_filename=$(basename "$instance_file")
+        output_file="$output_dir/${f1_name}_${instance_filename}"
 
-
-        # Run command in the background
+        # Run the command in the background
         {
-            real_time=$( (time $command > /dev/null 2>&1) 2>&1 | grep real | awk '{print $2}')
-            echo "time: $real_time $output_file"
+            run_command "$f1_name" "$instance_file" "$output_file" "$prefix"
         } &
 
-        # Ensure no more than $max_jobs are running at once
+        # Ensure no more than $(nproc) jobs are running at once
         while [[ $(jobs -r -p | wc -l) -ge $(nproc) ]]; do
             wait -n
         done        
     done
 done
+
+wait
