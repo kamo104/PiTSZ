@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Directories
-prog_dir="algorytmy1"
+prog_dir="algorytmy"
 instances_dir="my_instances"
 output_dir="out"
 log_file="run-log.txt"
@@ -16,11 +16,13 @@ run_command() {
     local instance_file="$2"
     local output_file="$3"
     local prefix="$4"
-    
+
+   
     # time_limit = instance_size/10
     local time_limit=$( echo $instance_file | sed 's/[a-z_\/]*[0-9]*_//' | sed 's/\.txt/\/10/' | bc)
     # Create the full command string
     local command="$prefix $instance_file $output_file $time_limit"
+    echo "CO SIE DZIEJE $command"
 
     # Capture execution time and results
     local time_str=$( (time $command > /dev/null 2>&1) 2>&1 | grep real | awk '{print $2}')

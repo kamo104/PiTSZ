@@ -18,7 +18,7 @@
         devShell = pkgs.mkShell {
           buildInputs =  with pkgs; [
             (boost.override { 
-              enableShared = false;
+              enableShared = true;
               enableStatic = true;
             })
             clang-tools

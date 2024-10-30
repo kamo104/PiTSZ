@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
   parseArgs(argc, argv, vm);
   string instanceFile = vm["instance_filename"].as<string>();
   string solutionFile = vm["solution_filename"].as<string>();
+  int time = vm["time"].as<int>();
 
   Instance instance(instanceFile, true);
   Solution solution(solutionFile);
