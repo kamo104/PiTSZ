@@ -14,9 +14,12 @@ class File:
     def open(self, filename: str = None):
         if filename:
             self.filename = filename
-        self.file_stream = open(self.filename, 'w+')
-        if not self.file_stream:
-            raise RuntimeError(f"Cannot create or open file: {self.filename}")
+        # Open in 'r+' mode to prevent erasure of contents and allow reading and writing
+        try:
+            self.file_stream = open(self.filename, 'r+')
+        except FileNotFoundError:
+            # If file doesn't exist, create it in 'w+' mode initially
+            self.file_stream = open(self.filename, 'w+')
 
     def clear(self):
         self.file_stream.close()
