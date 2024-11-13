@@ -5,6 +5,7 @@ prog_dir="algorytmy"
 instances_dir="my_instances"
 output_dir="out"
 log_file="run-log.txt"
+verifier_bin="python algo1/pajton.py --program verifier"
 
 mkdir -p "$output_dir"
 rm "$log_file"
@@ -19,7 +20,7 @@ run_command() {
 
    
     # time_limit = instance_size/10
-    local time_limit=$( echo $instance_file | sed 's/[a-z_\/]*[0-9]*_//' | sed 's/\.txt/\/10/' | bc)
+    local time_limit=$(echo $instance_file | sed 's/[a-z_\/]*[0-9]*_//' | sed 's/\.txt/\/10/' | bc)
     # Create the full command string
     local command="$prefix $instance_file $output_file $time_limit"
     echo "CO SIE DZIEJE $command"
@@ -35,7 +36,7 @@ run_command() {
     real_time=${real_time//./,}
 
     local raported_score=$(head -n1 "$output_file")
-    local real_score=$(./build/verifier "$instance_file" "$output_file" 2>/dev/null)
+    local real_score=$("$verifier_bin" "$instance_file" "$output_file" 2>/dev/null)
     
     # Log the output
     echo "$real_time $raported_score $real_score $output_file" | tee -a "$log_file"

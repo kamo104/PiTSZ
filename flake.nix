@@ -17,22 +17,20 @@
       {
         devShell = pkgs.mkShell {
           buildInputs =  with pkgs; [
-            (boost.override { 
-              enableShared = true;
-              enableStatic = true;
-            })
-            clang-tools
-            bear
-            binutils
-            cmake
-            gnumake
+            # (boost.override { 
+            #   enableShared = true;
+            #   enableStatic = true;
+            # })
+            # clang-tools
+            # bear
+            # binutils
+            # cmake
+            # gnumake
 
 
             (python3.withPackages (python-pkgs: [
               python-pkgs.numpy
             ]))
-
-            # (pkgs.callPackage ./algo1/package.nix {})
 
           ];
         };
