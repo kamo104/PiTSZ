@@ -40,21 +40,25 @@ class File:
 
         raise NotImplementedError("Subclasses must implement write")
 
+
 class Solution(File):
     def __init__(self, filename: str = "", load: bool = False):
         super().__init__(filename)
         self.score = 0
-        self.jobs: List[List[int]] = [[],[],[],[],[]]
+        self.jobs: List[List[int]] = []
         if load:
-            self.read(self.file_stream)
+            self.read()
 
     def read(self, input_stream=None):
         if input_stream == None:
             input_stream = self.file_stream
+            
+        lines = input_stream.readlines()
 
-        self.score = int(input_stream.readline().strip())
-        for i in range(5):
-            self.jobs[i] = [int(x)-1 for x in input_stream.read().strip().split()]
+        self.score = int(lines[0].strip())
+        for line in lines[1:]:
+            values = list(map(int, line.strip().split()))
+            self.jobs.append(values)
 
     def write(self, output_stream=None):
         if output_stream == None:
@@ -62,74 +66,105 @@ class Solution(File):
 
         output_stream.write(f"{self.score}\n")
         for i in range(5):
-            output_stream.write(" ".join(str(job+1) for job in self.jobs[i]) + "\n")
+            output_stream.write(" ".join(str(job) for job in self.jobs[i]) + "\n")
+
 
 class Instance(File):
     def __init__(self, filename: str = "", size: int = 0, load: bool = False):
         super().__init__(filename)
         self.size = size
-        self.work_times: List[List[int]] = [[],[],[],[],[]]
-        self.ready_times: List[int] = []
-        self.deadlines: List[int] = []
-
+        self.tasks = []  # List of dictionaries to store task info
         if load:
-            self.read(self.file_stream)
-        if size > 0 and not load:
+            self.read()
+        elif size > 0:
             self.generate(size)
 
     def read(self, input_stream=None):
         if input_stream == None:
             input_stream = self.file_stream
+            
+        lines = input_stream.readlines()
 
-        self.size = int(input_stream.readline().strip())
-        for _ in range(self.size):
-            line = input_stream.readline().split()
+        # First line: number of tasks
+        self.size = int(lines[0].strip())
+        if len(lines) - 1 != self.size:
+            raise ValueError(f"Expected {self.size} tasks, but found {len(lines) - 1} lines of task data.")
 
-            for i,j in zip(range(5), line[0:-2]):
-                self.work_times[i].append(int(j))
-
-            self.ready_times.append(int(line[-2]))
-            self.deadlines.append(int(line[-1]))
+        self.tasks = []
+        for idx, line in enumerate(lines[1:], start=1):
+            values = list(map(int, line.strip().split()))
+            if len(values) != 7:
+                raise ValueError(f"Line {idx + 1} should contain exactly 7 integers (found {len(values)}).")
+            
+            task = {
+                'pkj': values[:5],  # Processing times for 5 workers
+                'rj': values[5],    # Ready time
+                'dj': values[6],    # Deadline
+            }
+            self.tasks.append(task)
 
     def write(self, output_stream=None):
         if output_stream == None:
             output_stream = self.file_stream
 
         output_stream.write(f"{self.size}\n")
-        for i in range(self.size):
-            for j in range(5):
-                output_stream.write(f"{self.work_times[j][i]} ")
-            output_stream.write(f"{self.ready_times[i]} {self.deadlines[i]}\n")
+        for task in self.tasks:
+            pkj = " ".join(map(str, task['pkj']))
+            rj = task['rj']
+            dj = task['dj']
+            output_stream.write(f"{pkj} {rj} {dj}\n")
+
 
     def generate(self, n: int):
         random.seed(1)
         self.size = n
-        # Generate random work times for each of the 5 machines and each task
-        self.work_times = [[random.randint(1, 20) for _ in range(n)] for _ in range(5)]
-    
-        # Generate random ready times for each task
-        self.ready_times = [random.randint(0, 50) for _ in range(n)]
-    
-        # Generate random deadlines for each task, ensuring they are not too close to ready times
-        self.deadlines = [self.ready_times[i] + random.randint(10, 60) for i in range(n)]
+        self.tasks = []  # Clear existing tasks and generate new ones
 
+        for _ in range(n):
+            # Generate random work times for each of the 5 workers
+            pkj = [random.randint(1, 20) for _ in range(5)]
+
+            # Generate random ready time
+            rj = random.randint(0, 50)
+
+            # Generate random deadline, ensuring it's not too close to ready time
+            dj = rj + random.randint(10, 60)
+
+            # Append the task to the list
+            self.tasks.append({'pkj': pkj, 'rj': rj, 'dj': dj})
 
 def get_score(instance: Instance, solution: Solution) -> int:
     score = 0
-    for i in range(5):
-        current_time=0
-        for job in solution.jobs[i]:
-            current_time = max(instance.ready_times[job], current_time)
-            current_time += instance.work_times[i][job]
-            score = score if current_time <= instance.deadlines[job] else score + 1
-    return score
+
+    # print(solution.)
+    for worker in range(5):  # Iterate over each worker
+        current_time = 0
+
+        for job in solution.jobs[worker]:  # Iterate over jobs assigned to the worker
+            task = instance.tasks[job-1]    # Access task data from the tasks list
+            w_j = task['pkj'][worker]     # Work time for the specific worker
+            r_j = task['rj']              # Ready time
+            d_j = task['dj']              # Deadline
+
+            # Calculate start and finish times
+            start_time = max(r_j, current_time)
+            finish_time = start_time + w_j
+
+            # Update score if the task finishes after its deadline
+            if finish_time > d_j:
+                score += 1
+
+            # Update current time for the worker
+            current_time = finish_time
+
+    return score        
 
 def solution(args):
     instance = Instance(args.instance_filename, load=True)
     solution = Solution(args.solution_filename)
 
-    # solution.proc = list(range(instance.size))
-    solution.jobs[0] = list(range(instance.size))
+    solution.size = instance.size
+    solution.jobs = [[x+1 for x in range(instance.size)],[],[],[],[]]
     solution.score = get_score(instance, solution)
 
     solution.clear()
@@ -143,7 +178,7 @@ def verify(instance: Instance, solution: Solution) -> Tuple[bool, int]:
         return False, 0
 
     # Check if each process in the solution is within the allowed range
-    if any(job+1 <= 0 or job+1 > instance.size for job in used_jobs):
+    if any(job <= 0 or job > instance.size for job in used_jobs):
         # lst = [job for job in used_jobs if job <= 0 or job > instance.size]
         print(f"The solution contains a job outside the allowed range ([1:{instance.size}])", file=sys.stderr)
         return False, 0
@@ -179,6 +214,7 @@ def verifier(args):
 def generator(args):
     if args.size == None:
         print("The size of the instance needs to be provided.", file=sys.stderr)
+        exit(1)
     instance = Instance(args.instance_filename, args.size)
     instance.clear()
     instance.write()
@@ -196,8 +232,13 @@ def parse_args():
 def main():
     args = parse_args()
 
+    if args.instance_filename == None:
+        return 1
+
     match args.program:
         case "solution":
+            if args.instance_filename == None:
+                return 1
             return solution(args)
         case "verifier":
             return verifier(args)
