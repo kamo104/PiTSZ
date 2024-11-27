@@ -1,6 +1,6 @@
 **/.cache
-**/instances
-**/solutions
+**/instances*
+**/solutions*
 **/build
 
 
