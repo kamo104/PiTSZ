@@ -5,7 +5,8 @@ prog_dir="algorytmy"
 instances_dir="my_instances"
 output_dir="out"
 log_file="run-log.txt"
-verifier_bin="python algo1/pajton.py --program verifier"
+verifier_bin="algo2/pajton.py"
+verifier_args="--program verifier"
 
 mkdir -p "$output_dir"
 rm "$log_file"
@@ -36,7 +37,10 @@ run_command() {
     real_time=${real_time//./,}
 
     local raported_score=$(head -n1 "$output_file")
-    local real_score=$("$verifier_bin" "$instance_file" "$output_file" 2>/dev/null)
+    local real_score=$("python" "algo2/pajton.py" "--program" "verifier" "$instance_file" "$output_file")
+    echo "HELP ME python algo2/pajton.py --program verifier $instance_file $output_file"
+    echo "SCORE1: $raported_score"
+    echo "SCORE2: $real_score"
     
     # Log the output
     echo "$real_time $raported_score $real_score $output_file" | tee -a "$log_file"
