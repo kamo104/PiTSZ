@@ -4,6 +4,7 @@ import time
 from typing import List, Tuple
 from itertools import chain
 import sys
+import copy
 
 class File:
     def __init__(self, filename: str = ""):
@@ -147,59 +148,56 @@ def get_score(instance: Instance, solution: Solution) -> int:
     n = instance.size
     tasks = instance.tasks
 
-    machine_sequences = solution.patient_schedules  # 5 linii sekwencji pacjentów (gabinetów)
-    task_sequences = solution.task_sequences      # n linii sekwencji odwiedzin pracowników
+    rooms = copy.deepcopy(solution.patient_schedules)  # 5 linii sekwencji pacjentów (gabinetów)
+    doctors_next_machines = copy.deepcopy(solution.task_sequences)      # n linii sekwencji odwiedzin pracowników
 
     machine_count = 5
-    rooms = [list(seq) for seq in machine_sequences]  # Kolejki do gabinetów
-    patients_next_machines = [list(seq) for seq in task_sequences]  # Kolejność odwiedzin maszyn przez pacjentów
-    current_patient_in_room = [[-1, 0] for _ in range(machine_count)]  # (pacjent, czas trwania)
-    patients_time_in_clinic = [-1] * n  # Czas spędzony w klinice przez pacjentów
+    current_doctor_in_room = [[-1, 0] for _ in range(machine_count)]  # (lekarz, czas trwania)
+    doctors_time_in_clinic = [-1] * n  # Czas spędzony w klinice przez lekarzy
     current_time = 0
 
     def all_done():
         # Sprawdzanie, czy wszystkie kolejki są puste i wszystkie gabinety wolne
-        if any(rooms) or any(p_id != -1 for p_id, _ in current_patient_in_room):
+        if any(rooms) or any(p_id != -1 for p_id, _ in current_doctor_in_room):
             return False
         return True
 
     while not all_done():
-        # Aktualizacja czasu przebywania pacjentów w klinice
-        for patient_idx in range(n):
-            rj = tasks[patient_idx]['r']
+        # Aktualizacja czasu przebywania lekarzy w klinice
+        for doctor_idx in range(n):
+            rj = tasks[doctor_idx]['r']
             if rj <= current_time:
-                still_has_tasks = len(patients_next_machines[patient_idx]) > 0
-                is_in_room = any(p_id == patient_idx for p_id, _ in current_patient_in_room)
+                still_has_tasks = len(doctors_next_machines[doctor_idx]) > 0
+                is_in_room = any(p_id == doctor_idx for p_id, _ in current_doctor_in_room)
                 if still_has_tasks or is_in_room:
-                    patients_time_in_clinic[patient_idx] += 1
+                    doctors_time_in_clinic[doctor_idx] += 1 # inkrementacja czasu w gabinecie
 
         # Aktualizacja stanu gabinetów
         for room_nr in range(machine_count):
-            if current_patient_in_room[room_nr][0] != -1:
-                current_patient_in_room[room_nr][1] -= 1
-                if current_patient_in_room[room_nr][1] == 0:
-                    current_patient_in_room[room_nr][0] = -1  # Gabinet staje się wolny
+            if current_doctor_in_room[room_nr][0] != -1:
+                current_doctor_in_room[room_nr][1] -= 1 # dekrementacja czasu w gabinecie
+                if current_doctor_in_room[room_nr][1] == 0:
+                    current_doctor_in_room[room_nr][0] = -1  # Gabinet staje się wolny
 
         # Próba wpuszczenia pacjentów do wolnych gabinetów
         for room_nr in range(machine_count):
-            if current_patient_in_room[room_nr][0] == -1 and rooms[room_nr]:
-                next_patient_id = rooms[room_nr][0] - 1  # Zewnętrzny indeks -> wewnętrzny
-                if tasks[next_patient_id]['r'] <= current_time:
-                    if not any(p_id == next_patient_id for p_id, _ in current_patient_in_room):
-                        if patients_next_machines[next_patient_id] and \
-                                patients_next_machines[next_patient_id][0] == room_nr + 1:
-                            duration = tasks[next_patient_id][f'p{room_nr + 1}']
-                            current_patient_in_room[room_nr] = [next_patient_id, duration]
+            if current_doctor_in_room[room_nr][0] == -1 and rooms[room_nr]:
+                next_doctor_id = rooms[room_nr][0] - 1
+                if tasks[next_doctor_id]['r'] <= current_time:
+                    if not any(p_id == next_doctor_id for p_id, _ in current_doctor_in_room):
+                        if doctors_next_machines[next_doctor_id] and doctors_next_machines[next_doctor_id][0] == room_nr + 1:
+                            duration = tasks[next_doctor_id][f'p{room_nr + 1}']
+                            current_doctor_in_room[room_nr] = [next_doctor_id, duration]
                             rooms[room_nr].pop(0)
-                            patients_next_machines[next_patient_id].pop(0)
+                            doctors_next_machines[next_doctor_id].pop(0)
 
         current_time += 1
 
     # Obliczenie kosztu
     total_cost = 0
-    for patient_idx in range(n):
-        wj = tasks[patient_idx]['w']
-        Fj = patients_time_in_clinic[patient_idx]
+    for doctor_idx in range(n):
+        wj = tasks[doctor_idx]['w']
+        Fj = doctors_time_in_clinic[doctor_idx]
         total_cost += wj * Fj
 
     return total_cost
@@ -210,55 +208,53 @@ def solution(args):
     output_filename = args.solution_filename
     solution = Solution(output_filename)
 
-    best_score = float('inf')
-    best_patient_schedules = None
-    best_task_sequences = None
-
     num_workers = 5
-    tasks = list(range(1, instance.size + 1))  # Tasks are 1-indexed
 
-    candidate_patient_schedules = [[] for i in range(5)]
-    candidate_task_sequences = [[] for i in range(instance.size)]
-    for i in range(5):
-        candidate_patient_schedules[i] = [i+1 for i in range(instance.size)]
-
-    for i in range(instance.size):
-        candidate_task_sequences[i] = [i+1 for i in range(5)]
-
-    candidate_solution = Solution()
-    candidate_solution.patient_schedules = candidate_patient_schedules
-    candidate_solution.task_sequences = candidate_task_sequences
-    candidate_solution.score = get_score(instance, candidate_solution)
-
-    if candidate_solution.score < best_score:
-        best_score = candidate_solution.score
-        best_patient_schedules = candidate_patient_schedules
-        best_task_sequences = candidate_task_sequences
-
-    # Save the best found solution
-    solution.patient_schedules = best_patient_schedules
-    solution.task_sequences = best_task_sequences
-    solution.score = best_score
+    solution.patient_schedules = [[j+1 for j in range(instance.size)] for i in range(num_workers)]
+    solution.task_sequences = [[j+1 for j in range(num_workers)] for i in range(instance.size)]
+    solution.score = get_score(instance, solution)
     solution.clear()
     solution.write()
 
-def verify(instance: Instance, solution: Solution) -> Tuple[bool, int]:
-    try:
-        calculated_score = get_score(instance, solution)
-        return True, calculated_score
-    except IndexError as e:
-        print(f"Verification failed: {e}", file=sys.stderr)
-        return False, 0
+def verify(instance: Instance, solution: Solution) -> int:
+    if any([any(v <= 0 for v in x) or any(v > instance.size for v in x) for x in solution.patient_schedules]):
+        print("wrong patient index (not in [1,instance.size])", file=sys.stderr)
+        return 0
+
+    if any([any(v <= 0 for v in x) or any(v > 5 for v in x) for x in solution.task_sequences]):
+        print("wrong machine index (not in [1,instance.size])", file=sys.stderr)
+        return 0
+
+    for g in range(5):
+        used = [0] * instance.size
+        for el in solution.patient_schedules[g]:
+            used[el-1] += 1
+        if any([e > 1 for e in used]):
+            print("patient index used more than once", file=sys.stderr)
+            return 0
+        if any([e == 0 for e in used]):
+            print("patient index not used", file=sys.stderr)
+            return 0
+
+    for p in range(instance.size):
+        used = [0] * 5
+        for el in solution.task_sequences[p]:
+            used[el-1] += 1
+        if any([e > 1 for e in used]):
+            print("machine index used more than once", file=sys.stderr)
+            return 0
+        if any([e == 0 for e in used]):
+            print("machine index not used", file=sys.stderr)
+            return 0
+
+    return get_score(instance, solution)
 
     
 def verifier(args):
     instance = Instance(args.instance_filename, load=True)
     solution = Solution(args.solution_filename, load=True)
 
-    res, score = verify(instance, solution)
-    if not res:
-        print("Verification failed.", file=sys.stderr)
-        return 1
+    score = verify(instance, solution)
     print(score)
     return 0
 
