@@ -1,3 +1,4 @@
+**/.direnv
 **/.cache
 **/instances*
 **/solutions*
@@ -6,6 +7,7 @@
 
 **/algorytmy1
 **/instances*
+**/my_instances
 **/out
 
 ludzie.txt

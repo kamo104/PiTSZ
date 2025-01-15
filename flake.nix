@@ -28,9 +28,15 @@
             # gnumake
 
 
-            (python3.withPackages (python-pkgs: [
-              python-pkgs.numpy
-              python-pkgs.pandas
+
+
+            (python3.withPackages (py-pkgs: [
+              py-pkgs.numpy
+              py-pkgs.pandas
+
+              py-pkgs.python-lsp-server
+              py-pkgs.python-lsp-black
+              py-pkgs.python-lsp-ruff
             ]))
 
           ];

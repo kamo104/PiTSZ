@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Directories
-prog_dir="algorytmy"
+prog_dir="solutions3"
 instances_dir="my_instances"
 output_dir="out"
 log_file="run-log.txt"
-verifier_bin="algo2/pajton.py"
+verifier_bin="algo3/pajton.py"
 verifier_args="--program verifier"
 
 mkdir -p "$output_dir"
@@ -37,7 +37,7 @@ run_command() {
     real_time=${real_time//./,}
 
     local raported_score=$(head -n1 "$output_file")
-    local real_score=$("python" "algo2/pajton.py" "--program" "verifier" "$instance_file" "$output_file")
+    local real_score=$("python" "$verifier_bin" "--program" "verifier" "$instance_file" "$output_file")
     echo "HELP ME python algo2/pajton.py --program verifier $instance_file $output_file"
     echo "SCORE1: $raported_score"
     echo "SCORE2: $real_score"

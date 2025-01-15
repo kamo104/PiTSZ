@@ -27,13 +27,13 @@ class File:
             raise RuntimeError(f"Failed to clear the file: {self.filename}")
 
     def read(self, input_stream=None):
-        if input_stream == None:
+        if input_stream is None:
             input_stream = self.file_stream
 
         raise NotImplementedError("Subclasses must implement read")
 
     def write(self, output_stream=None):
-        if output_stream == None:
+        if output_stream is None:
             output_stream = self.file_stream
 
         raise NotImplementedError("Subclasses must implement write")
@@ -42,26 +42,53 @@ class File:
 class Solution(File):
     def __init__(self, filename: str = "", load: bool = False):
         super().__init__(filename)
-        self.score = 0
-        self.schedule = []
+        self.score = 0.0  # Wartość kryterium (zmiennoprzecinkowa)
+        self.patient_schedules = []  # Sekwencje pacjentów (5 linii)
+        self.task_sequences = []  # Sekwencje odwiedzania gabinetów (n linii)
         if load:
             self.read()
 
     def read(self, input_stream=None):
-        if input_stream == None:
+        if input_stream is None:
             input_stream = self.file_stream
-            
-        lines = input_stream.readlines()
-        self.score = int(lines[0].strip())
-        self.schedule = [list(map(int, line.split())) for line in lines[1:]]
+
+        try:
+            lines = input_stream.readlines()
+            if not lines:
+                raise ValueError("Plik wejściowy jest pusty.")
+
+            # Wczytanie wartości kryterium
+            self.score = float(lines[0].strip())
+
+            # Wczytanie 5 linii sekwencji pacjentów
+            self.patient_schedules = [
+                list(map(int, lines[i + 1].split())) for i in range(5)
+            ]
+
+            # Wczytanie pozostałych linii jako sekwencje zadań
+            self.task_sequences = [
+                list(map(int, line.split())) for line in lines[6:]
+            ]
+        except (ValueError, IndexError) as e:
+            raise ValueError(f"Błąd wczytywania pliku: {e}")
 
     def write(self, output_stream=None):
-        if output_stream == None:
+        if output_stream is None:
             output_stream = self.file_stream
-        
-        output_stream.write(f"{self.score}\n")
-        for row in self.schedule:
-            output_stream.write(" ".join(map(str, row)) + "\n")
+
+        try:
+            # Zapis wartości kryterium
+            output_stream.write(f"{self.score}\n")
+
+            # Zapis 5 linii sekwencji pacjentów
+            for row in self.patient_schedules:
+                output_stream.write(" ".join(map(str, row)) + "\n")
+
+            # Zapis sekwencji zadań
+            for row in self.task_sequences:
+                output_stream.write(" ".join(map(str, row)) + "\n")
+        except Exception as e:
+            raise IOError(f"Błąd zapisu do pliku: {e}")
 
 
 class Instance(File):
@@ -98,7 +125,7 @@ class Instance(File):
 
         
     def write(self, output_stream=None):
-        if output_stream == None:
+        if output_stream is None:
             output_stream = self.file_stream
 
         output_stream.write(f"{self.size}\n")
@@ -116,64 +143,104 @@ class Instance(File):
             self.tasks.append({'times': times, 'r': r, 'w': w})
 
 
-
 def get_score(instance: Instance, solution: Solution) -> int:
     n = instance.size
+    tasks = instance.tasks
+
+    machine_sequences = solution.patient_schedules  # 5 linii sekwencji pacjentów (gabinetów)
+    task_sequences = solution.task_sequences      # n linii sekwencji odwiedzin pracowników
+
     machine_count = 5
-    
+    rooms = [list(seq) for seq in machine_sequences]  # Kolejki do gabinetów
+    patients_next_machines = [list(seq) for seq in task_sequences]  # Kolejność odwiedzin maszyn przez pacjentów
+    current_patient_in_room = [[-1, 0] for _ in range(machine_count)]  # (pacjent, czas trwania)
+    patients_time_in_clinic = [-1] * n  # Czas spędzony w klinice przez pacjentów
+    current_time = 0
 
-    machine_times = [0] * machine_count
-    completion_times = [0] * n
-    
+    def all_done():
+        # Sprawdzanie, czy wszystkie kolejki są puste i wszystkie gabinety wolne
+        if any(rooms) or any(p_id != -1 for p_id, _ in current_patient_in_room):
+            return False
+        return True
+
+    while not all_done():
+        # Aktualizacja czasu przebywania pacjentów w klinice
+        for patient_idx in range(n):
+            rj = tasks[patient_idx]['r']
+            if rj <= current_time:
+                still_has_tasks = len(patients_next_machines[patient_idx]) > 0
+                is_in_room = any(p_id == patient_idx for p_id, _ in current_patient_in_room)
+                if still_has_tasks or is_in_room:
+                    patients_time_in_clinic[patient_idx] += 1
+
+        # Aktualizacja stanu gabinetów
+        for room_nr in range(machine_count):
+            if current_patient_in_room[room_nr][0] != -1:
+                current_patient_in_room[room_nr][1] -= 1
+                if current_patient_in_room[room_nr][1] == 0:
+                    current_patient_in_room[room_nr][0] = -1  # Gabinet staje się wolny
+
+        # Próba wpuszczenia pacjentów do wolnych gabinetów
+        for room_nr in range(machine_count):
+            if current_patient_in_room[room_nr][0] == -1 and rooms[room_nr]:
+                next_patient_id = rooms[room_nr][0] - 1  # Zewnętrzny indeks -> wewnętrzny
+                if tasks[next_patient_id]['r'] <= current_time:
+                    if not any(p_id == next_patient_id for p_id, _ in current_patient_in_room):
+                        if patients_next_machines[next_patient_id] and \
+                                patients_next_machines[next_patient_id][0] == room_nr + 1:
+                            duration = tasks[next_patient_id][f'p{room_nr + 1}']
+                            current_patient_in_room[room_nr] = [next_patient_id, duration]
+                            rooms[room_nr].pop(0)
+                            patients_next_machines[next_patient_id].pop(0)
+
+        current_time += 1
+
+    # Obliczenie kosztu
     total_cost = 0
+    for patient_idx in range(n):
+        wj = tasks[patient_idx]['w']
+        Fj = patients_time_in_clinic[patient_idx]
+        total_cost += wj * Fj
 
-    for task_id, task in enumerate(instance.tasks, start=0):
-        for machine in range(machine_count):
-            start_time = max(
-                machine_times[machine],
-                completion_times[task_id - 1] if task_id - 1 < n else 0,
-                task['r']
-            )
-            end_time = start_time + task[f'p{machine + 1}']
-            machine_times[machine] = end_time
-            completion_times[task_id - 1] = end_time
-        
-
-        task_duration = completion_times[task_id - 1] - task['r']
-        total_cost += task_duration * task['w']
-    
     return total_cost
 
 def solution(args):
+    # Load the instance and prepare the solution
     instance = Instance(args.instance_filename, load=True)
-    solution = Solution(args.solution_filename)
+    output_filename = args.solution_filename
+    solution = Solution(output_filename)
 
-    start_time = time.time()
     best_score = float('inf')
-    best_schedule = None
+    best_patient_schedules = None
+    best_task_sequences = None
 
     num_workers = 5
+    tasks = list(range(1, instance.size + 1))  # Tasks are 1-indexed
 
-    tasks = list(range(1, instance.size + 1))
-    random.shuffle(tasks)
+    candidate_patient_schedules = [[] for i in range(5)]
+    candidate_task_sequences = [[] for i in range(instance.size)]
+    for i in range(5):
+        candidate_patient_schedules[i] = [i+1 for i in range(instance.size)]
 
-    schedule = [tasks[i::num_workers] for i in range(num_workers)]
-    for _ in range(100):
-        random.shuffle(tasks)
-        candidate_schedule = [tasks[i::num_workers] for i in range(num_workers)]
-        candidate_solution = Solution()
-        candidate_solution.schedule = candidate_schedule
-        candidate_solution.score = get_score(instance, candidate_solution)
+    for i in range(instance.size):
+        candidate_task_sequences[i] = [i+1 for i in range(5)]
 
-        if candidate_solution.score < best_score:
-            best_score = candidate_solution.score
-            best_schedule = candidate_schedule
+    candidate_solution = Solution()
+    candidate_solution.patient_schedules = candidate_patient_schedules
+    candidate_solution.task_sequences = candidate_task_sequences
+    candidate_solution.score = get_score(instance, candidate_solution)
 
-    solution.schedule = best_schedule
+    if candidate_solution.score < best_score:
+        best_score = candidate_solution.score
+        best_patient_schedules = candidate_patient_schedules
+        best_task_sequences = candidate_task_sequences
+
+    # Save the best found solution
+    solution.patient_schedules = best_patient_schedules
+    solution.task_sequences = best_task_sequences
     solution.score = best_score
     solution.clear()
     solution.write()
-
 
 def verify(instance: Instance, solution: Solution) -> Tuple[bool, int]:
     try:
@@ -192,7 +259,7 @@ def verifier(args):
     if not res:
         print("Verification failed.", file=sys.stderr)
         return 1
-    print(score, end="")
+    print(score)
     return 0
 
 def generator(args):
